@@ -67,7 +67,7 @@ pygame.init()
 WIDTH, HEIGHT = 800, 600
 win = pygame.display.set_mode((WIDTH, HEIGHT))
 pygame.display.set_caption("Blackjack Game")
-#ulalal
+#ulalal2
 # Colors
 WHITE = (255, 255, 255)
 BLACK = (0, 0, 0)
