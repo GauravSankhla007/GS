@@ -1,0 +1,246 @@
+import pygame
+import sys
+
+# Initialize Pygame
+pygame.init()
+
+# Set up the window
+WIDTH, HEIGHT = 800, 600
+win = pygame.display.set_mode((WIDTH, HEIGHT))
+pygame.display.set_caption("Blackjack Game")
+
+# Colors
+WHITE = (255, 255, 255)
+BLACK = (0, 0, 0)
+GREEN = (0, 128, 0)
+
+# Fonts
+FONT = pygame.font.SysFont('arial', 24)
+
+# Button
+hit_button = pygame.Rect(150, 500, 100, 40)
+stand_button = pygame.Rect(550, 500, 100, 40)
+
+def draw_window():
+    win.fill(GREEN)
+    
+    # Draw Buttons
+    pygame.draw.rect(win, BLACK, hit_button)
+    pygame.draw.rect(win, BLACK, stand_button)
+    
+    # Draw Text on Buttons
+    hit_text = FONT.render('Hit', True, WHITE)
+    stand_text = FONT.render('Stand', True, WHITE)
+    win.blit(hit_text, (hit_button.x + 25, hit_button.y + 5))
+    win.blit(stand_text, (stand_button.x + 10, stand_button.y + 5))
+    
+    pygame.display.update()
+
+def main():
+    run = True
+    while run:
+        draw_window()
+        
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                run = False
+            
+            if event.type == pygame.MOUSEBUTTONDOWN:
+                if hit_button.collidepoint(event.pos):
+                    print("Hit clicked!")
+                if stand_button.collidepoint(event.pos):
+                    print("Stand clicked!")
+    
+    pygame.quit()
+    sys.exit()
+
+if __name__ == "__main__":
+    main()
+import pygame
+import sys
+import random
+
+# Initialize Pygame
+pygame.init()
+
+# Set up the window
+WIDTH, HEIGHT = 800, 600
+win = pygame.display.set_mode((WIDTH, HEIGHT))
+pygame.display.set_caption("Blackjack Game")
+
+# Colors
+WHITE = (255, 255, 255)
+BLACK = (0, 0, 0)
+GREEN = (0, 128, 0)
+RED = (255, 0, 0)
+
+# Fonts
+FONT = pygame.font.SysFont('arial', 24)
+
+# Button
+hit_button = pygame.Rect(150, 500, 100, 40)
+stand_button = pygame.Rect(550, 500, 100, 40)
+
+# Deck, Cards, Hands
+suits = ['Spades', 'Clubs', 'Hearts', 'Diamonds']
+ranks = [
+    {'Rank': 'A', 'Value': 11},
+    {'Rank': '2', 'Value': 2},
+    {'Rank': '3', 'Value': 3},
+    {'Rank': '4', 'Value': 4},
+    {'Rank': '5', 'Value': 5},
+    {'Rank': '6', 'Value': 6},
+    {'Rank': '7', 'Value': 7},
+    {'Rank': '8', 'Value': 8},
+    {'Rank': '9', 'Value': 9},
+    {'Rank': '10', 'Value': 10},
+    {'Rank': 'J', 'Value': 10},
+    {'Rank': 'Q', 'Value': 10},
+    {'Rank': 'K', 'Value': 10},
+]
+
+class Card:
+    def __init__(self, suit, rank):
+        self.suit = suit
+        self.rank = rank
+
+    def __str__(self):
+        return f"{self.rank['Rank']} of {self.suit}"
+
+class Deck:
+    def __init__(self):
+        self.cards = [Card(suit, rank) for suit in suits for rank in ranks]
+        random.shuffle(self.cards)
+
+    def deal(self):
+        return self.cards.pop() if self.cards else None
+
+class Hand:
+    def __init__(self):
+        self.cards = []
+    
+    def add_card(self, card):
+        self.cards.append(card)
+    
+    def get_value(self):
+        value = 0
+        ace = False
+        for card in self.cards:
+            value += card.rank['Value']
+            if card.rank['Rank'] == 'A':
+                ace = True
+        if ace and value > 21:
+            value -= 10
+        return value
+
+# Game Setup
+deck = Deck()
+player_hand = Hand()
+dealer_hand = Hand()
+
+# Deal two cards to each
+for _ in range(2):
+    player_hand.add_card(deck.deal())
+    dealer_hand.add_card(deck.deal())
+
+# Game states
+player_turn = True
+game_over = False
+result_text = ""
+
+def draw_hand(hand, x, y, hide_first_card=False):
+    for index, card in enumerate(hand.cards):
+        rect = pygame.Rect(x + index * 80, y, 70, 100)
+        pygame.draw.rect(win, WHITE, rect)
+        pygame.draw.rect(win, BLACK, rect, 2)
+        
+        if hide_first_card and index == 0:
+            pygame.draw.rect(win, RED, rect)  # Red rectangle for hidden card
+        else:
+            text = FONT.render(f"{card.rank['Rank']} {card.suit[0]}", True, BLACK)
+            win.blit(text, (rect.x + 5, rect.y + 40))
+
+def draw_window():
+    win.fill(GREEN)
+
+    # Draw Buttons
+    if not game_over:
+        pygame.draw.rect(win, BLACK, hit_button)
+        pygame.draw.rect(win, BLACK, stand_button)
+
+        hit_text = FONT.render('Hit', True, WHITE)
+        stand_text = FONT.render('Stand', True, WHITE)
+        win.blit(hit_text, (hit_button.x + 25, hit_button.y + 5))
+        win.blit(stand_text, (stand_button.x + 10, stand_button.y + 5))
+
+    # Draw Hands
+    player_label = FONT.render("Your Hand", True, WHITE)
+    dealer_label = FONT.render("Dealer's Hand", True, WHITE)
+    win.blit(player_label, (50, 300))
+    win.blit(dealer_label, (50, 50))
+
+    draw_hand(player_hand, 50, 350)
+    draw_hand(dealer_hand, 50, 100, hide_first_card=player_turn)
+
+    # Show values
+    if game_over:
+        player_value = player_hand.get_value()
+        dealer_value = dealer_hand.get_value()
+        value_text = FONT.render(f"Your Value: {player_value}  |  Dealer Value: {dealer_value}", True, WHITE)
+        win.blit(value_text, (200, 250))
+
+        result = FONT.render(result_text, True, RED)
+        win.blit(result, (WIDTH // 2 - result.get_width() // 2, HEIGHT // 2))
+
+    pygame.display.update()
+
+def check_winner():
+    global game_over, result_text
+    player_value = player_hand.get_value()
+    dealer_value = dealer_hand.get_value()
+
+    if player_value > 21:
+        result_text = "You Bust! Dealer Wins!"
+    elif dealer_value > 21:
+        result_text = "Dealer Busts! You Win!"
+    elif player_value > dealer_value:
+        result_text = "You Win!"
+    elif player_value < dealer_value:
+        result_text = "Dealer Wins!"
+    else:
+        result_text = "It's a Tie!"
+    game_over = True
+
+def dealer_play():
+    while dealer_hand.get_value() < 17:
+        dealer_hand.add_card(deck.deal())
+    check_winner()
+
+def main():
+    global player_turn, game_over
+
+    run = True
+    while run:
+        draw_window()
+
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                run = False
+
+            if not game_over:
+                if event.type == pygame.MOUSEBUTTONDOWN:
+                    if hit_button.collidepoint(event.pos) and player_turn:
+                        player_hand.add_card(deck.deal())
+                        if player_hand.get_value() > 21:
+                            check_winner()
+                            player_turn = False
+
+                    if stand_button.collidepoint(event.pos) and player_turn:
+                        player_turn = False
+                        dealer_play()
+
+    pygame.quit()
+    sys.exit()
+
+if __name__ == "__main__":
+    main()
